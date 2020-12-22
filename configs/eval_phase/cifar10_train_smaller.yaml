@@ -35,5 +35,5 @@ DATA_LOADER:
   NUM_WORKERS: 4
 CUDNN:
   BENCHMARK: True
-OUT_DIR: results/cifar10_default/search
+OUT_DIR: results/cifar10_train_default/search
 LOG_PERIOD: 10

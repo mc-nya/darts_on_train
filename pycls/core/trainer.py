@@ -321,24 +321,44 @@ def train_model():
     # Create data loaders and meters
     if cfg.TRAIN.PORTION < 1:
         if "search" in cfg.MODEL.TYPE:
-            train_loader = [loader._construct_loader(
+            if cfg.TRAIN.PORTION <0.1:
+                train_loader = [loader._construct_loader(
                 dataset_name=cfg.TRAIN.DATASET,
                 split=cfg.TRAIN.SPLIT,
                 batch_size=int(cfg.TRAIN.BATCH_SIZE / cfg.NUM_GPUS),
                 shuffle=True,
                 drop_last=True,
-                portion=cfg.TRAIN.PORTION,
+                portion=1.0,
                 side="l"
-            ),
-            loader._construct_loader(
-                dataset_name=cfg.TRAIN.DATASET,
-                split=cfg.TRAIN.SPLIT,
-                batch_size=int(cfg.TRAIN.BATCH_SIZE / cfg.NUM_GPUS),
-                shuffle=True,
-                drop_last=True,
-                portion=cfg.TRAIN.PORTION,
-                side="r"
-            )]
+                ),
+                loader._construct_loader(
+                    dataset_name=cfg.TRAIN.DATASET,
+                    split=cfg.TRAIN.SPLIT,
+                    batch_size=int(cfg.TRAIN.BATCH_SIZE / cfg.NUM_GPUS),
+                    shuffle=True,
+                    drop_last=True,
+                    portion=1.0,
+                    side="r"
+                )]
+            else:
+                train_loader = [loader._construct_loader(
+                    dataset_name=cfg.TRAIN.DATASET,
+                    split=cfg.TRAIN.SPLIT,
+                    batch_size=int(cfg.TRAIN.BATCH_SIZE / cfg.NUM_GPUS),
+                    shuffle=True,
+                    drop_last=True,
+                    portion=cfg.TRAIN.PORTION,
+                    side="l"
+                ),
+                loader._construct_loader(
+                    dataset_name=cfg.TRAIN.DATASET,
+                    split=cfg.TRAIN.SPLIT,
+                    batch_size=int(cfg.TRAIN.BATCH_SIZE / cfg.NUM_GPUS),
+                    shuffle=True,
+                    drop_last=True,
+                    portion=cfg.TRAIN.PORTION,
+                    side="r"
+                )]
         else:
             train_loader = loader._construct_loader(
                 dataset_name=cfg.TRAIN.DATASET,

@@ -11,5 +11,5 @@ source ~/.bashrc
 conda activate pytorch
 export PYTHONPATH=.
 python tools/train_net.py --cfg configs/search_phase/cifar10_default.yaml
-python tools/train_net.py --cfg configs/eval_phase/cifar10_default.yaml
+#python tools/train_net.py --cfg configs/eval_phase/cifar10_default.yaml
 
