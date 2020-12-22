@@ -1,7 +1,8 @@
 MODEL:
-  TYPE: darts_v1_search
+  TYPE: nas_search
   NUM_CLASSES: 10
 NAS:
+  GENOTYPE: darts_v1
   WIDTH: 16
   DEPTH: 8
 OPTIM:
