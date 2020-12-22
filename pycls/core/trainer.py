@@ -338,7 +338,7 @@ def train_model():
                     shuffle=True,
                     drop_last=True,
                     portion=1.0,
-                    side="r"
+                    side="l"
                 )]
             else:
                 train_loader = [loader._construct_loader(
