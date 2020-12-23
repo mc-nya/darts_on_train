@@ -4,7 +4,7 @@ MODEL:
   LOSS_FUN: label_smoothed_cross_entropy
   LABEL_SMOOTHING_EPS: 0.1
 NAS:
-  GENOTYPE: darts_v1
+  GENOTYPE: cifar10_train_large
   WIDTH: 36
   DEPTH: 20
   AUX: True
@@ -35,5 +35,5 @@ DATA_LOADER:
   NUM_WORKERS: 4
 CUDNN:
   BENCHMARK: True
-OUT_DIR: results/cifar10_train_large/search
+OUT_DIR: results/cifar10_train_large/eval
 LOG_PERIOD: 10
