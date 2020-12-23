@@ -6,7 +6,7 @@
 #SBATCH --partition=gpu,gputest
 #SBATCH --gres=gpu:2
 #SBATCH --job-name=cifar10_train_default
-#SBATCH --output=results/cifar10_train_default/eval/log.txt
+#SBATCH --output=results/cifar10_train_default/eval_log.txt
 source ~/.bashrc
 conda activate pytorch
 export PYTHONPATH=.
