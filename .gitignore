@@ -31,3 +31,4 @@ scratch*
 summaries/
 figs/*.pdf
 results/*
+scripts/*

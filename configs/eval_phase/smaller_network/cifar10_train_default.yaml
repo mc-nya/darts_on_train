@@ -4,7 +4,7 @@ MODEL:
   LOSS_FUN: label_smoothed_cross_entropy
   LABEL_SMOOTHING_EPS: 0.1
 NAS:
-  GENOTYPE: cifar10_default
+  GENOTYPE: cifar10_train_default
   WIDTH: 16
   DEPTH: 20
   AUX: True
@@ -23,17 +23,17 @@ TRAIN:
   SPLIT: train
   BATCH_SIZE: 192
   IM_SIZE: 32
-  CHECKPOINT_PERIOD: 10
+  CHECKPOINT_PERIOD: 50
   EVAL_PERIOD: 1
 TEST:
   DATASET: cifar10
   SPLIT: test
   BATCH_SIZE: 256
   IM_SIZE: 32
-NUM_GPUS: 2
+NUM_GPUS: 1
 DATA_LOADER:
   NUM_WORKERS: 4
 CUDNN:
   BENCHMARK: True
-OUT_DIR: results/cifar10_default/eval
+OUT_DIR: results/cifar10_train_default/eval
 LOG_PERIOD: 10
