@@ -439,16 +439,16 @@ def train_model():
         benchmark.compute_time_full(model, loss_fun, l, test_loader)
     # Perform the training loop
     logger.info("Start epoch: {}".format(start_epoch + 1))
-    train_log_file=open(cfg.OUT_DIR+'/train_log.txt','w')
-    test_log_file=open(cfg.OUT_DIR+'/test_log.txt','w')
-    val_log_file=open(cfg.OUT_DIR+'/val_log.txt','w')
+    train_log_file=open(cfg.OUT_DIR+'/train_log.txt','a')
+    test_log_file=open(cfg.OUT_DIR+'/test_log.txt','a')
+    val_log_file=open(cfg.OUT_DIR+'/val_log.txt','a')
     for cur_epoch in range(start_epoch, cfg.OPTIM.MAX_EPOCH):
         if cur_epoch == 0:
             checkpoint_file = checkpoint.save_checkpoint(model, optimizer, cur_epoch-1)
             logger.info("Wrote checkpoint to: {}".format(checkpoint_file))
         # Train for one epoch
         f = search_epoch if "search" in cfg.MODEL.TYPE else train_epoch
-        #f(train_loader, model, loss_fun, optimizer, train_meter, cur_epoch)
+        f(train_loader, model, loss_fun, optimizer, train_meter, cur_epoch)
 
         # Compute precise BN stats
         if cfg.BN.USE_PRECISE_STATS:
