@@ -472,7 +472,7 @@ def train_model():
                 train_stats=test_epoch(train_loader[0], model, train_test_meter, cur_epoch)
             else:
                 print('Test peformance on training data: ')
-                train_stats=test_epoch(train_loader[0], model, train_test_meter, cur_epoch)
+                train_stats=test_epoch(train_loader, model, train_test_meter, cur_epoch)
 
             train_log_file.write('{} {} {}\n'.format(train_stats['epoch'],train_stats['top1_err'],train_stats['top5_err']))
             test_log_file.write('{} {} {}\n'.format(test_stats['epoch'],test_stats['top1_err'],test_stats['top5_err']))
