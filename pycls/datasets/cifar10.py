@@ -72,7 +72,7 @@ class Cifar10(torch.utils.data.Dataset):
         inputs = np.vstack(inputs).astype(np.float32)
         inputs = inputs.reshape((-1, 3, cfg.TRAIN.IM_SIZE, cfg.TRAIN.IM_SIZE))
         if self._data_portion:
-            data_length=int(self._portion * len(inputs))
+            data_length=int(self._data_portion * len(inputs))
             index=[]
             for i in range(10):
                 index.extend(np.where(np.array(labels)==i)[0][:data_length//10])

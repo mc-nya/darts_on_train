@@ -264,10 +264,10 @@ def test_epoch(test_loader, model, test_meter, cur_epoch):
         test_meter.iter_toc()
         # Update and log stats
         test_meter.update_stats(top1_err, top5_err, mb_size)
-        stats=test_meter.log_iter_stats(cur_epoch, cur_iter)
+        test_meter.log_iter_stats(cur_epoch, cur_iter)
         test_meter.iter_tic()
     # Log epoch stats
-    test_meter.log_epoch_stats(cur_epoch)
+    stats=test_meter.log_epoch_stats(cur_epoch)
     test_meter.reset()
     return stats
 
@@ -443,9 +443,13 @@ def train_model():
     test_log_file=open(cfg.OUT_DIR+'/test_log.txt','w')
     val_log_file=open(cfg.OUT_DIR+'/val_log.txt','w')
     for cur_epoch in range(start_epoch, cfg.OPTIM.MAX_EPOCH):
+        if cur_epoch == 0:
+            checkpoint_file = checkpoint.save_checkpoint(model, optimizer, cur_epoch-1)
+            logger.info("Wrote checkpoint to: {}".format(checkpoint_file))
         # Train for one epoch
         f = search_epoch if "search" in cfg.MODEL.TYPE else train_epoch
-        f(train_loader, model, loss_fun, optimizer, train_meter, cur_epoch)
+        #f(train_loader, model, loss_fun, optimizer, train_meter, cur_epoch)
+
         # Compute precise BN stats
         if cfg.BN.USE_PRECISE_STATS:
             net.compute_precise_bn_stats(model, train_loader)
@@ -456,19 +460,23 @@ def train_model():
         # Evaluate the model
         next_epoch = cur_epoch + 1
         if next_epoch % cfg.TRAIN.EVAL_PERIOD == 0 or next_epoch == cfg.OPTIM.MAX_EPOCH:
+            print('Test peformance on testing data: ')
             test_stats=test_epoch(test_loader, model, test_meter, cur_epoch)
+            print(test_stats)
             if cfg.TRAIN.PORTION<1:
-                val_stats=test_epoch(val_loader, model, test_meter, cur_epoch)
-                val_log_file.write('{} {} {} {} {}\n'.format(val_stats['epoch'],val_stats['top1_err'],
-                val_stats['top5_err'],val_stats['loss'],val_stats['lr']))
+                print('Test peformance on validation data: ')
+                val_stats=test_epoch(val_loader, model, val_meter, cur_epoch)
+                val_log_file.write('{} {} {}\n'.format(val_stats['epoch'],val_stats['top1_err'],val_stats['top5_err']))
                 val_log_file.flush()
+                print('Test peformance on training data: ')
                 train_stats=test_epoch(train_loader[0], model, train_test_meter, cur_epoch)
             else:
+                print('Test peformance on training data: ')
                 train_stats=test_epoch(train_loader[0], model, train_test_meter, cur_epoch)
-            train_log_file.write('{} {} {} {} {}\n'.format(train_stats['epoch'],train_stats['top1_err'],
-                train_stats['top5_err'],train_stats['loss'],train_stats['lr']))
-            test_log_file.write('{} {} {} {} {}\n'.format(test_stats['epoch'],test_stats['top1_err'],
-                test_stats['top5_err'],test_stats['loss'],test_stats['lr']))
+
+            train_log_file.write('{} {} {}\n'.format(train_stats['epoch'],train_stats['top1_err'],train_stats['top5_err']))
+            test_log_file.write('{} {} {}\n'.format(test_stats['epoch'],test_stats['top1_err'],test_stats['top5_err']))
+
             train_log_file.flush()
             test_log_file.flush()
     train_log_file.close()

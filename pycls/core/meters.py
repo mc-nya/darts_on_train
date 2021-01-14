@@ -272,7 +272,10 @@ class TestMeter(object):
 
     def log_epoch_stats(self, cur_epoch):
         stats = self.get_epoch_stats(cur_epoch)
+        #print(stats)
         logger.info(logging.dump_log_data(stats, "test_epoch"))
+        #print(stats)
+        return stats
 
 
 class TrainMeterIoU(object):

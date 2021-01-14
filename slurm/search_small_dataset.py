@@ -29,4 +29,4 @@ for root,dir,file_list in os.walk(config_dir):
             script_file.write('conda activate pytorch\n')
             script_file.write('export PYTHONPATH=.\n')
             script_file.write(f'python tools/train_net.py --cfg {config_dir}/{filename} OUT_DIR results/{network_type}/{file_prefix}/search/')
-        os.system(f'sbatch {out_file}')
+        #os.system(f'sbatch {out_file}')

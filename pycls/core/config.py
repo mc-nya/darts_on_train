@@ -308,7 +308,7 @@ _C.OPTIM.ARCH_EPOCH = 0.0
 _C.TRAIN = CfgNode()
 
 # Dataset and split
-_C.TRAIN.DATASET = ""
+_C.TRAIN.DATASET = "cifar10"
 _C.TRAIN.SPLIT = "train"
 
 # Total mini-batch size
@@ -343,7 +343,7 @@ _C.TRAIN.DATAPORTION=1.0
 _C.TEST = CfgNode()
 
 # Dataset and split
-_C.TEST.DATASET = ""
+_C.TEST.DATASET = "cifar10"
 _C.TEST.SPLIT = "val"
 
 # Total mini-batch size
