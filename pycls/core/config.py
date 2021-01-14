@@ -335,6 +335,7 @@ _C.TRAIN.GRAY_PERCENTAGE = 0.0
 # Portion to create trainA/trainB split
 _C.TRAIN.PORTION = 1.0
 
+_C.TRAIN.DATAPORTION=1.0
 
 # ------------------------------------------------------------------------------------ #
 # Testing options
@@ -420,7 +421,7 @@ _C.CFG_DEST = "config.yaml"
 
 # Note that non-determinism may still be present due to non-deterministic
 # operator implementations in GPU operator libraries
-_C.RNG_SEED = 1
+_C.RNG_SEED = 12345
 
 # Log destination ('stdout' or 'file')
 _C.LOG_DEST = "stdout"

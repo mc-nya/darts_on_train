@@ -35,14 +35,14 @@ _PATHS = {"cifar10": "cifar10",
           "cityscapes": "cityscapes"}
 
 
-def _construct_loader(dataset_name, split, batch_size, shuffle, drop_last, portion=None, side=None):
+def _construct_loader(dataset_name, split, batch_size, shuffle, drop_last, portion=None, side=None, data_portion=None):
     """Constructs the data loader for the given dataset."""
     err_str = "Dataset '{}' not supported".format(dataset_name)
     assert dataset_name in _DATASETS and dataset_name in _PATHS, err_str
     # Retrieve the data path for the dataset
     data_path = os.path.join(_DATA_DIR, _PATHS[dataset_name])
     # Construct the dataset
-    dataset = _DATASETS[dataset_name](data_path, split, portion, side)
+    dataset = _DATASETS[dataset_name](data_path, split, portion, side, data_portion)
     # Create a sampler for multi-process training
     sampler = DistributedSampler(dataset) if cfg.NUM_GPUS > 1 else None
     # Create collate_fn

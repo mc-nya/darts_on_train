@@ -166,6 +166,7 @@ class TrainMeter(object):
             return
         stats = self.get_iter_stats(cur_epoch, cur_iter)
         logger.info(logging.dump_log_data(stats, "train_iter"))
+        return stats
 
     def get_epoch_stats(self, cur_epoch):
         cur_iter_total = (cur_epoch + 1) * self.epoch_iters
@@ -250,6 +251,7 @@ class TestMeter(object):
             return
         stats = self.get_iter_stats(cur_epoch, cur_iter)
         logger.info(logging.dump_log_data(stats, "test_iter"))
+        return stats
 
     def get_epoch_stats(self, cur_epoch):
         top1_err = self.num_top1_mis / self.num_samples

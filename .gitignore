@@ -32,3 +32,4 @@ summaries/
 figs/*.pdf
 results/*
 scripts/*
+graph/*

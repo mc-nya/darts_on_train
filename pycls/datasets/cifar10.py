@@ -10,7 +10,7 @@
 import os
 import pickle
 from sklearn.neighbors import NearestNeighbors
-
+import random
 import numpy as np
 import pycls.core.logging as logging
 import pycls.datasets.transforms as transforms
@@ -33,13 +33,14 @@ _SD = [x / 255.0 for x in [63.0, 62.1, 66.7]]
 class Cifar10(torch.utils.data.Dataset):
     """CIFAR-10 dataset."""
 
-    def __init__(self, data_path, split, portion=None, side=None):
+    def __init__(self, data_path, split, portion=None, side=None, data_portion=None):
         assert os.path.exists(data_path), "Data path '{}' not found".format(data_path)
         splits = ["train", "test"]
         assert split in splits, "Split '{}' not supported for cifar".format(split)
         logger.info("Constructing CIFAR-10 {}...".format(split))
         self._data_path, self._split = data_path, split
         self._portion, self._side = portion, side
+        self._data_portion=data_portion
         if cfg.TASK == 'col':
             # Color centers in ab channels; numpy array; shape (313, 2)
             self._pts = np.load(os.path.join(folder, "files", "pts_in_hull.npy"))
@@ -70,6 +71,15 @@ class Cifar10(torch.utils.data.Dataset):
         # Combine and reshape the inputs
         inputs = np.vstack(inputs).astype(np.float32)
         inputs = inputs.reshape((-1, 3, cfg.TRAIN.IM_SIZE, cfg.TRAIN.IM_SIZE))
+        if self._data_portion:
+            data_length=int(self._portion * len(inputs))
+            index=[]
+            for i in range(10):
+                index.extend(np.where(np.array(labels)==i)[0][:data_length//10])
+            random.shuffle(index)
+            inputs=inputs[index]
+            labels=np.array(labels)[index].tolist()
+            print(f'Dataset size: {inputs.shape}, {len(labels)}')
         if self._portion:
             # CIFAR-10 data are random, so no need to shuffle
             pos = int(self._portion * len(inputs))

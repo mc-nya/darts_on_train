@@ -264,11 +264,13 @@ def test_epoch(test_loader, model, test_meter, cur_epoch):
         test_meter.iter_toc()
         # Update and log stats
         test_meter.update_stats(top1_err, top5_err, mb_size)
-        test_meter.log_iter_stats(cur_epoch, cur_iter)
+        stats=test_meter.log_iter_stats(cur_epoch, cur_iter)
         test_meter.iter_tic()
     # Log epoch stats
     test_meter.log_epoch_stats(cur_epoch)
     test_meter.reset()
+    return stats
+
 
 
 def train_model():
@@ -323,14 +325,15 @@ def train_model():
         if "search" in cfg.MODEL.TYPE:
             if cfg.TRAIN.PORTION <0.1:
                 train_loader = [loader._construct_loader(
-                dataset_name=cfg.TRAIN.DATASET,
-                split=cfg.TRAIN.SPLIT,
-                batch_size=int(cfg.TRAIN.BATCH_SIZE / cfg.NUM_GPUS),
-                shuffle=True,
-                drop_last=True,
-                portion=1.0,
-                side="l"
-                ),
+                    dataset_name=cfg.TRAIN.DATASET,
+                    split=cfg.TRAIN.SPLIT,
+                    batch_size=int(cfg.TRAIN.BATCH_SIZE / cfg.NUM_GPUS),
+                    shuffle=True,
+                    drop_last=True,
+                    portion=1.0,
+                    side="l",
+                    data_portion=cfg.TRAIN.DATAPORTION
+                    ),
                 loader._construct_loader(
                     dataset_name=cfg.TRAIN.DATASET,
                     split=cfg.TRAIN.SPLIT,
@@ -338,8 +341,19 @@ def train_model():
                     shuffle=True,
                     drop_last=True,
                     portion=1.0,
-                    side="l"
+                    side="l",
+                    data_portion=cfg.TRAIN.DATAPORTION
                 )]
+                val_loader = loader._construct_loader(
+                    dataset_name=cfg.TRAIN.DATASET,
+                    split=cfg.TRAIN.SPLIT,
+                    batch_size=int(cfg.TRAIN.BATCH_SIZE / cfg.NUM_GPUS),
+                    shuffle=True,
+                    drop_last=True,
+                    portion=1.0,
+                    side="l",
+                    data_portion=cfg.TRAIN.DATAPORTION
+                )
             else:
                 train_loader = [loader._construct_loader(
                     dataset_name=cfg.TRAIN.DATASET,
@@ -348,7 +362,8 @@ def train_model():
                     shuffle=True,
                     drop_last=True,
                     portion=cfg.TRAIN.PORTION,
-                    side="l"
+                    side="l",
+                    data_portion=cfg.TRAIN.DATAPORTION
                 ),
                 loader._construct_loader(
                     dataset_name=cfg.TRAIN.DATASET,
@@ -357,8 +372,20 @@ def train_model():
                     shuffle=True,
                     drop_last=True,
                     portion=cfg.TRAIN.PORTION,
-                    side="r"
+                    side="r",
+                    data_portion=cfg.TRAIN.DATAPORTION
                 )]
+                val_loader = loader._construct_loader(
+                    dataset_name=cfg.TRAIN.DATASET,
+                    split=cfg.TRAIN.SPLIT,
+                    batch_size=int(cfg.TRAIN.BATCH_SIZE / cfg.NUM_GPUS),
+                    shuffle=True,
+                    drop_last=True,
+                    portion=cfg.TRAIN.PORTION,
+                    side="r",
+                    data_portion=cfg.TRAIN.DATAPORTION
+                )
+            test_loader = loader.construct_test_loader()
         else:
             train_loader = loader._construct_loader(
                 dataset_name=cfg.TRAIN.DATASET,
@@ -367,31 +394,54 @@ def train_model():
                 shuffle=True,
                 drop_last=True,
                 portion=cfg.TRAIN.PORTION,
-                side="l"
+                side="l",
+                data_portion=cfg.TRAIN.DATAPORTION
             )
-        test_loader = loader._construct_loader(
-            dataset_name=cfg.TRAIN.DATASET,
-            split=cfg.TRAIN.SPLIT,
-            batch_size=int(cfg.TRAIN.BATCH_SIZE / cfg.NUM_GPUS),
-            shuffle=False,
-            drop_last=False,
-            portion=cfg.TRAIN.PORTION,
-            side="r"
-        )
+            val_loader = loader._construct_loader(
+                    dataset_name=cfg.TRAIN.DATASET,
+                    split=cfg.TRAIN.SPLIT,
+                    batch_size=int(cfg.TRAIN.BATCH_SIZE / cfg.NUM_GPUS),
+                    shuffle=True,
+                    drop_last=True,
+                    portion=cfg.TRAIN.PORTION,
+                    side="r",
+                    data_portion=cfg.TRAIN.DATAPORTION
+                )
+            test_loader = loader._construct_loader(
+                dataset_name=cfg.TRAIN.DATASET,
+                split=cfg.TRAIN.SPLIT,
+                batch_size=int(cfg.TRAIN.BATCH_SIZE / cfg.NUM_GPUS),
+                shuffle=False,
+                drop_last=False,
+                portion=cfg.TRAIN.PORTION,
+                side="r",
+                data_portion=cfg.TRAIN.DATAPORTION
+            )   
     else:
         train_loader = loader.construct_train_loader()
         test_loader = loader.construct_test_loader()
+
     train_meter_type = meters.TrainMeterIoU if cfg.TASK == "seg" else meters.TrainMeter
     test_meter_type = meters.TestMeterIoU if cfg.TASK == "seg" else meters.TestMeter
     l = train_loader[0] if isinstance(train_loader, list) else train_loader
     train_meter = train_meter_type(len(l))
     test_meter = test_meter_type(len(test_loader))
+    
+    if cfg.TRAIN.PORTION<1:
+        val_meter = test_meter_type(len(val_loader))
+        train_test_meter=test_meter_type(len(train_loader[0]))
+    else:
+        train_test_meter=test_meter_type(len(train_loader))
+
     # Compute model and loader timings
     if start_epoch == 0 and cfg.PREC_TIME.NUM_ITER > 0:
         l = train_loader[0] if isinstance(train_loader, list) else train_loader
         benchmark.compute_time_full(model, loss_fun, l, test_loader)
     # Perform the training loop
     logger.info("Start epoch: {}".format(start_epoch + 1))
+    train_log_file=open(cfg.OUT_DIR+'/train_log.txt','w')
+    test_log_file=open(cfg.OUT_DIR+'/test_log.txt','w')
+    val_log_file=open(cfg.OUT_DIR+'/val_log.txt','w')
     for cur_epoch in range(start_epoch, cfg.OPTIM.MAX_EPOCH):
         # Train for one epoch
         f = search_epoch if "search" in cfg.MODEL.TYPE else train_epoch
@@ -406,7 +456,24 @@ def train_model():
         # Evaluate the model
         next_epoch = cur_epoch + 1
         if next_epoch % cfg.TRAIN.EVAL_PERIOD == 0 or next_epoch == cfg.OPTIM.MAX_EPOCH:
-            test_epoch(test_loader, model, test_meter, cur_epoch)
+            test_stats=test_epoch(test_loader, model, test_meter, cur_epoch)
+            if cfg.TRAIN.PORTION<1:
+                val_stats=test_epoch(val_loader, model, test_meter, cur_epoch)
+                val_log_file.write('{} {} {} {} {}\n'.format(val_stats['epoch'],val_stats['top1_err'],
+                val_stats['top5_err'],val_stats['loss'],val_stats['lr']))
+                val_log_file.flush()
+                train_stats=test_epoch(train_loader[0], model, train_test_meter, cur_epoch)
+            else:
+                train_stats=test_epoch(train_loader[0], model, train_test_meter, cur_epoch)
+            train_log_file.write('{} {} {} {} {}\n'.format(train_stats['epoch'],train_stats['top1_err'],
+                train_stats['top5_err'],train_stats['loss'],train_stats['lr']))
+            test_log_file.write('{} {} {} {} {}\n'.format(test_stats['epoch'],test_stats['top1_err'],
+                test_stats['top5_err'],test_stats['loss'],test_stats['lr']))
+            train_log_file.flush()
+            test_log_file.flush()
+    train_log_file.close()
+    test_log_file.close()
+    val_log_file.close()
 
 
 def test_model():
